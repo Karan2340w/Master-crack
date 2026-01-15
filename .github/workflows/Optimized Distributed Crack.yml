@@ -1,0 +1,30 @@
+name: Optimized Distributed Crack
+on:
+  workflow_dispatch:
+
+jobs:
+  crack:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # ਸਾਰੇ 62 ਅੱਖਰਾਂ ਦੀ ਸਹੀ ਲਿਸਟ (A-Z, a-z, 0-9)
+        start_char: [A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: sudo apt update && sudo apt install -y hashcat crunch
+
+      - name: Crack Range
+        run: |
+          # ਮੈਟਰਿਕਸ ਦੇ ਅੱਖਰ ਅਨੁਸਾਰ ਸਟਾਰਟਿੰਗ ਪੁਆਇੰਟ ਬਣਾਉਣਾ
+          START_STR="AAAA${{ matrix.start_char }}AAA"
+          echo "Starting crack from: $START_STR"
+          
+          # Hashcat ਸਟੇਟਸ ਹਰ 60 ਸੈਕਿੰਡ ਬਾਅਦ ਦਿਖਾਏਗਾ
+          crunch 8 14 ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -s $START_STR | \
+          hashcat -m 22000 crack.hc22000 -a 0 --force --status --status-timer=60
+          
